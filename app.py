@@ -1,29 +1,46 @@
+import requests
 from flask import Flask, render_template, request
-from duckduckgo_search import DDGS
+import joblib
 
 app = Flask(__name__)
 
-def check_live_fact(query):
+# Fallback ML model setup
+try:
+    model = joblib.load('fake_news_model.pkl')
+    vectorizer = joblib.load('tfidf_vectorizer.pkl')
+except Exception as e:
+    model, vectorizer = None, None
+
+# Paste your copied Google Fact Check API key here
+GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY_HERE"
+
+def verify_claim_via_api(query_text):
     """
-    Searches web for existing fact-checks on the input query.
+    Live API call to Google Fact Check database
     """
-    try:
-        with DDGS() as ddgs:
-            # Fact-check sources search query
-            search_query = f"{query} fact check fake or real"
-            results = list(ddgs.text(search_query, max_results=3))
-            
-            if results:
-                combined_text = " ".join([r['title'] + " " + r['body'] for r in results]).lower()
-                
-                # Check for strong debunks in web snippets
-                if any(word in combined_text for word in ['fake', 'hoax', 'false', 'debunked', 'misleading', 'untrue', 'rumor']):
-                    return "Fake / Misleading News ⚠️"
-                elif any(word in combined_text for word in ['true', 'confirmed', 'verified', 'official report']):
-                    return "Real News ✅"
-    except Exception as e:
-        print("Search API Error:", e)
+    if not GOOGLE_API_KEY or GOOGLE_API_KEY == "AIzaSyBSrAqkpdcm_dfxSjrY2pvC9DooARrBoiQ":
+        return None
+
+    url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={query_text}&key={GOOGLE_API_KEY}"
     
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if "claims" in data and len(data["claims"]) > 0:
+                claim = data["claims"][0]
+                review = claim["claimReview"][0]
+                rating = review.get("textualRating", "Verified Fact Check")
+                publisher = review.get("publisher", {}).get("name", "Fact Checker")
+                
+                rating_lower = rating.lower()
+                if "false" in rating_lower or "fake" in rating_lower or "misleading" in rating_lower or "incorrect" in rating_lower:
+                    return f"{rating} (Verified by {publisher}) ⚠️"
+                else:
+                    return f"{rating} (Verified by {publisher}) ✅"
+    except Exception as e:
+        print("API Lookup error:", e)
+        
     return None
 
 @app.route('/')
@@ -38,16 +55,22 @@ def predict():
         if not news_text.strip():
             return render_template('index.html', prediction_text="Kripya text enter karein.")
 
-        # 1. Direct Live Web Fact-Check Verification
-        live_result = check_live_fact(news_text)
+        # 1. Primary Layer: Real-Time Dynamic API Fact-Check
+        api_result = verify_claim_via_api(news_text)
         
-        if live_result:
-            final_output = f"Result: {live_result} (Verified via Live Fact-Check Search)"
+        if api_result:
+            result = f"Live Fact Check: {api_result}"
         else:
-            # Fallback output if no online records exist
-            final_output = "Result: Needs Verification / Unconfirmed News ⚠️"
+            # 2. Secondary Layer: Machine Learning Pattern Prediction (Fallback)
+            if model and vectorizer:
+                data = [news_text]
+                vect = vectorizer.transform(data)
+                prediction = model.predict(vect)
+                result = "Real News ✅" if prediction[0] == 1 else "Fake / Misleading News ⚠️"
+            else:
+                result = "Analysis Completed"
 
-        return render_template('index.html', prediction_text=final_output)
+        return render_template('index.html', prediction_text=f'Result: {result}')
 
 if __name__ == '__main__':
     app.run()
