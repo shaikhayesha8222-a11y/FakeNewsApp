@@ -3,7 +3,7 @@ import joblib
 
 app = Flask(__name__)
 
-# Load Model and Vectorizer
+# Load model and vectorizer
 model = joblib.load('fake_news_model.pkl')
 vectorizer = joblib.load('tfidf_vectorizer.pkl')
 
@@ -14,28 +14,20 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     if request.method == 'POST':
-        news_text = request.form.get('news_text', '').strip()
+        # Handles 'news', 'news_text', or any standard textarea name
+        news_text = request.form.get('news') or request.form.get('news_text') or ""
         
-        if not news_text:
-            return render_template('index.html', prediction="Kripya koi text enter karein.")
-            
-        lower_text = news_text.lower()
-        
-        # Rule-based detection for viral claims
-        fake_triggers = [
-            "15 days of total darkness", "darkness", "aliens", "miracle herb", 
-            "secret potion", "cures all", "drinking hot water", "raw onions",
-            "flying human", "100% guaranteed", "earth stop rotating", "mind control"
-        ]
-        
-        if any(trigger in lower_text for trigger in fake_triggers):
-            prediction = 'FAKE'
-        else:
-            vectorized_text = vectorizer.transform([news_text])
-            prediction = model.predict(vectorized_text)[0]
+        if not news_text.strip():
+            return render_template('index.html', prediction_text="Kripya text enter karein.")
 
-        return render_template('index.html', prediction=prediction, text=news_text)
+        # Vectorize and Predict
+        data = [news_text]
+        vect = vectorizer.transform(data)
+        prediction = model.predict(vect)
+        
+        # Result logic
+        result = "Real News ✅" if prediction[0] == 1 else "Fake News ⚠️"
+        return render_template('index.html', prediction_text=f'Result: {result}')
 
 if __name__ == '__main__':
     app.run()
-     
