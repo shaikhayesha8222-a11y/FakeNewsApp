@@ -1,46 +1,34 @@
 import pandas as pd
-import joblib
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+import joblib
 
-print("Loading Kaggle Dataset...")
+# Synthetic Dataset for Cloud Building
+data = {
+    'text': [
+        "Government announces new education policy for universities.",
+        "Breaking: Alien spacecraft landed in Mumbai yesterday night!",
+        "Scientists discover new species of deep sea fish.",
+        "Drink hot lemon water to cure all diseases instantly!",
+        "Stock market reaches new high following economic report.",
+        "Miracle cure found that removes 100% wrinkles overnight!"
+    ],
+    'label': [1, 0, 1, 0, 1, 0]  # 1 = Real, 0 = Fake
+}
 
-# 1. Read Both CSV Datasets
-fake_df = pd.read_csv('Fake.csv')
-true_df = pd.read_csv('True.csv')
-
-# 2. Assign Labels
-fake_df['label'] = 'FAKE'
-true_df['label'] = 'REAL'
-
-# 3. Merge Datasets
-df = pd.concat([fake_df, true_df], ignore_index=True)
-
-# Combine title and text for better feature context
-df['text'] = df['title'].fillna('') + " " + df['text'].fillna('')
-df = df[['text', 'label']].dropna()
+df = pd.DataFrame(data)
 
 X = df['text']
 y = df['label']
 
-print("Dataset Loaded. Vectorizing text...")
+vectorizer = TfidfVectorizer(ngram_range=(1, 3))
+X_vec = vectorizer.fit_transform(X)
 
-# 4. Train-Test Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = LogisticRegression()
+model.fit(X_vec, y)
 
-# 5. TF-IDF Feature Extraction
-tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7, ngram_range=(1, 2))
-tfidf_train = tfidf_vectorizer.fit_transform(X_train)
-
-print("Training Logistic Regression Model...")
-
-# 6. Model Training
-model = LogisticRegression(max_iter=1000)
-model.fit(tfidf_train, y_train)
-
-# 7. Save Model Artifacts
+# Save .pkl files inside cloud environment
 joblib.dump(model, 'fake_news_model.pkl')
-joblib.dump(tfidf_vectorizer, 'tfidf_vectorizer.pkl')
+joblib.dump(vectorizer, 'tfidf_vectorizer.pkl')
 
-print("\nSUCCESS: Model Trained on 40,000+ Articles with High Accuracy!")
+print("Model trained successfully on Cloud!")
