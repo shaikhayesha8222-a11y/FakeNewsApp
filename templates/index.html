@@ -4,53 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TruthCheck - Fake News Detector</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .hero { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; padding: 40px 0; }
-        .card-custom { border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff, #00d2ff);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            display: flex;
+            gap: 20px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 320px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            font-size: 15px;
+            resize: vertical;
+            outline: none;
+        }
+        textarea:focus {
+            border-color: #007bff;
+        }
+        .btn {
+            background-color: #0066ff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background-color: #0052cc;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-left: 5px solid #007bff;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .guidelines li {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
 
-    <div class="hero text-center mb-5">
-        <h1 class="fw-bold">TruthCheck Portal</h1>
-        <p class="lead">AI Fake News Detector & Media Literacy Tool</p>
+    <div class="header">
+        <h1>TruthCheck Portal</h1>
+        <p>AI Fake News Detector & Media Literacy Tool</p>
     </div>
 
     <div class="container">
-        <div class="row">
-            <div class="col-md-7">
-                <div class="card card-custom p-4 bg-white mb-4">
-                    <h3>News Article Verify Karo</h3>
-                    <form action="/predict" method="POST">
-                        <div class="mb-3">
-                            <label for="news_text" class="form-label">News headline ya text yahan paste karo:</label>
-                            <textarea class="form-control" id="news_text" name="news_text" rows="6" required>{{ text if text else '' }}</textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 fw-bold">Analyze Text</button>
-                    </form>
+        <!-- Input Form Section -->
+        <div class="card">
+            <h2>News Article Verify Karo</h2>
+            <p style="color: #666;">News headline ya text yahan paste karo:</p>
+            
+            <form action="/predict" method="POST">
+                <textarea name="news" rows="6" placeholder="A viral video claiming to show..." required>{{ request.form['news'] if request.form['news'] else '' }}</textarea>
+                <button type="submit" class="btn">Analyze Text</button>
+            </form>
 
-                    {% if prediction %}
-                    <div class="mt-4 alert {% if prediction == 'REAL' %}alert-success{% else %}alert-danger{% endif %}">
-                        <h4>Result:</h4>
-                        <p class="fs-4 fw-bold mb-0">Status: <u>{{ prediction }}</u></p>
-                    </div>
-                    {% endif %}
-                </div>
+            <!-- Output Prediction Box -->
+            {% if prediction_text %}
+            <div class="result-box">
+                <h3 style="color: #003366; margin: 0;">{{ prediction_text }}</h3>
             </div>
+            {% endif %}
+        </div>
 
-            <div class="col-md-5">
-                <div class="card card-custom p-4 bg-white">
-                    <h4>💡 Media Literacy Guidelines</h4>
-                    <ul class="list-group list-group-flush mt-2">
-                        <li class="list-group-item">🔍 <strong>Check Domain:</strong> Fake websites ke URL alag hote hain (Jaise `.com.co`).</li>
-                        <li class="list-group-item">👤 <strong>Author Check:</strong> Writer ki authenticity verify karo.</li>
-                        <li class="list-group-item">📅 <strong>Check Date:</strong> Purani news ko naye context mai share toh nahi kiya?</li>
-                        <li class="list-group-item">🚩 <strong>Clickbait Titles:</strong> Jyada emotional headlines Fake ho sakti hain.</li>
-                    </ul>
-                </div>
-            </div>
+        <!-- Media Literacy Guidelines Section -->
+        <div class="card">
+            <h2>💡 Media Literacy Guidelines</h2>
+            <ul class="guidelines" style="list-style-type: none; padding-left: 0;">
+                <li>🔍 <strong>Check Domain:</strong> Fake websites ke URL alag hote hain (Jaise `.com.co`).</li>
+                <li>👤 <strong>Author Check:</strong> Writer ki authenticity verify karo.</li>
+                <li>📅 <strong>Check Date:</strong> Purani news ko naye context mai share toh nahi kiya?</li>
+                <li>🚩 <strong>Clickbait Titles:</strong> Jyada emotional headlines Fake ho sakti hain.</li>
+            </ul>
         </div>
     </div>
 
