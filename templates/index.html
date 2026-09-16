@@ -5,77 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TruthCheck - Fake News Detector</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
             padding: 0;
         }
         .header {
-            background: linear-gradient(135deg, #007bff, #00d2ff);
+            background: linear-gradient(135deg, #007bff, #00c6ff);
             color: white;
-            padding: 30px 20px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 40px 20px;
         }
         .container {
-            max-width: 1100px;
+            max-width: 1000px;
             margin: 30px auto;
             display: flex;
             gap: 20px;
-            padding: 0 20px;
             flex-wrap: wrap;
+            padding: 0 20px;
         }
         .card {
             background: white;
             padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             flex: 1;
-            min-width: 320px;
+            min-width: 300px;
         }
         textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #cccccc;
-            border-radius: 8px;
-            font-size: 15px;
+            height: 120px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            box-sizing: border-box;
             resize: vertical;
-            outline: none;
         }
-        textarea:focus {
-            border-color: #007bff;
-        }
-        .btn {
-            background-color: #0066ff;
+        button {
+            background-color: #007bff;
             color: white;
             border: none;
             padding: 12px 20px;
-            width: 100%;
-            border-radius: 8px;
             font-size: 16px;
-            font-weight: bold;
+            border-radius: 5px;
             cursor: pointer;
+            width: 100%;
             margin-top: 15px;
-            transition: 0.3s;
+            font-weight: bold;
         }
-        .btn:hover {
-            background-color: #0052cc;
+        button:hover {
+            background-color: #0056b3;
         }
         .result-box {
             margin-top: 20px;
             padding: 15px;
-            background-color: #e8f4f8;
+            border-radius: 5px;
+            background-color: #e9ecef;
             border-left: 5px solid #007bff;
-            border-radius: 8px;
-            text-align: center;
         }
         .guidelines li {
             margin-bottom: 12px;
-            line-height: 1.5;
+            font-size: 15px;
+            color: #333;
         }
     </style>
 </head>
@@ -83,21 +76,20 @@
 
     <div class="header">
         <h1>TruthCheck Portal</h1>
-        <p>AI Fake News Detector & Media Literacy Tool</p>
+        <p>AI-Powered Fake News Detector & Media Literacy Tool</p>
     </div>
 
     <div class="container">
         <!-- Input Form Section -->
         <div class="card">
-            <h2>News Article Verify Karo</h2>
-            <p style="color: #666;">Paste news headline or text here...:</p>
+            <h2>Verify News Article</h2>
+            <p style="color: #666;">Paste news headline or text here:</p>
             
             <form action="/predict" method="POST">
-                <textarea name="news" rows="6" placeholder="A viral video claiming to show..." required>{{ request.form['news'] if request.form['news'] else '' }}</textarea>
-                <button type="submit" class="btn">Analyze Text</button>
+                <textarea name="news" placeholder="Enter news headline or claim here..." required>{{ request.form['news'] if request.form['news'] else '' }}</textarea>
+                <button type="submit">Analyze Text</button>
             </form>
 
-            <!-- Output Prediction Box -->
             {% if prediction_text %}
             <div class="result-box">
                 <h3 style="color: #003366; margin: 0;">{{ prediction_text }}</h3>
