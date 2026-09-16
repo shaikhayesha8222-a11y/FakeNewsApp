@@ -1,18 +1,30 @@
 from flask import Flask, render_template, request
-import joblib
+from duckduckgo_search import DDGS
 
 app = Flask(__name__)
 
-# Load trained model artifacts
-model = joblib.load('fake_news_model.pkl')
-vectorizer = joblib.load('tfidf_vectorizer.pkl')
-
-# Specific indicators for fake/misleading claims
-FAKE_INDICATORS = [
-    'ai-generated', 'ai generated', 'deepfake', 'fake', 'fabricated', 
-    'morphed', 'doctored', 'manipulated', 'false claim', 'viral video claiming',
-    'viral image claiming', 'hoax', 'alien', 'merged with sbi', 'nine public-sector'
-]
+def check_live_fact(query):
+    """
+    Searches web for existing fact-checks on the input query.
+    """
+    try:
+        with DDGS() as ddgs:
+            # Fact-check sources search query
+            search_query = f"{query} fact check fake or real"
+            results = list(ddgs.text(search_query, max_results=3))
+            
+            if results:
+                combined_text = " ".join([r['title'] + " " + r['body'] for r in results]).lower()
+                
+                # Check for strong debunks in web snippets
+                if any(word in combined_text for word in ['fake', 'hoax', 'false', 'debunked', 'misleading', 'untrue', 'rumor']):
+                    return "Fake / Misleading News ⚠️"
+                elif any(word in combined_text for word in ['true', 'confirmed', 'verified', 'official report']):
+                    return "Real News ✅"
+    except Exception as e:
+        print("Search API Error:", e)
+    
+    return None
 
 @app.route('/')
 def home():
@@ -26,18 +38,16 @@ def predict():
         if not news_text.strip():
             return render_template('index.html', prediction_text="Kripya text enter karein.")
 
-        text_lower = news_text.lower()
+        # 1. Direct Live Web Fact-Check Verification
+        live_result = check_live_fact(news_text)
         
-        # Explicit fake check override
-        if any(indicator in text_lower for indicator in FAKE_INDICATORS):
-            result = "Fake / Misleading News ⚠️"
+        if live_result:
+            final_output = f"Result: {live_result} (Verified via Live Fact-Check Search)"
         else:
-            data = [news_text]
-            vect = vectorizer.transform(data)
-            prediction = model.predict(vect)
-            result = "Real News ✅" if prediction[0] == 1 else "Fake / Misleading News ⚠️"
+            # Fallback output if no online records exist
+            final_output = "Result: Needs Verification / Unconfirmed News ⚠️"
 
-        return render_template('index.html', prediction_text=f'Result: {result}')
+        return render_template('index.html', prediction_text=final_output)
 
 if __name__ == '__main__':
     app.run()
