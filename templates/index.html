@@ -90,7 +90,7 @@
         <!-- Input Form Section -->
         <div class="card">
             <h2>News Article Verify Karo</h2>
-            <p style="color: #666;">News headline ya text yahan paste karo:</p>
+            <p style="color: #666;">Paste news headline or text here...:</p>
             
             <form action="/predict" method="POST">
                 <textarea name="news" rows="6" placeholder="A viral video claiming to show..." required>{{ request.form['news'] if request.form['news'] else '' }}</textarea>
@@ -109,10 +109,10 @@
         <div class="card">
             <h2>💡 Media Literacy Guidelines</h2>
             <ul class="guidelines" style="list-style-type: none; padding-left: 0;">
-                <li>🔍 <strong>Check Domain:</strong> Fake websites ke URL alag hote hain (Jaise `.com.co`).</li>
-                <li>👤 <strong>Author Check:</strong> Writer ki authenticity verify karo.</li>
-                <li>📅 <strong>Check Date:</strong> Purani news ko naye context mai share toh nahi kiya?</li>
-                <li>🚩 <strong>Clickbait Titles:</strong> Jyada emotional headlines Fake ho sakti hain.</li>
+                <li>🔍 <strong>Check Domain:</strong> Fake websites have different URLs (e.g., .com.co).</li>
+                <li>👤 <strong>Author Check:</strong> Verify the authenticity of the writer.</li>
+                <li>📅 <strong>Check Date:</strong> Is old news being shared out of context?</li>
+                <li>🚩 <strong>Clickbait Titles:</strong> Overly emotional headlines can be fake.</li>
             </ul>
         </div>
     </div>
