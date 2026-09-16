@@ -1,26 +1,43 @@
-import requests
 from flask import Flask, render_template, request
+import joblib
 
 app = Flask(__name__)
 
-def check_fact_api(query):
-    # Google Fact Check Tools API
-    url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={query}&key=YOUR_GOOGLE_API_KEY"
-    response = requests.get(url).json()
+# Load trained model artifacts
+model = joblib.load('fake_news_model.pkl')
+vectorizer = joblib.load('tfidf_vectorizer.pkl')
 
-    if "claims" in response:
-        rating = response["claims"][0]["claimReview"][0]["textualRating"]
-        return f"Fact Check Result: {rating}"
-    return None
+# Specific indicators for fake/misleading claims
+FAKE_INDICATORS = [
+    'ai-generated', 'ai generated', 'deepfake', 'fake', 'fabricated', 
+    'morphed', 'doctored', 'manipulated', 'false claim', 'viral video claiming',
+    'viral image claiming', 'hoax', 'alien', 'merged with sbi', 'nine public-sector'
+]
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    news_text = request.form.get('news') or ""
+    if request.method == 'POST':
+        news_text = request.form.get('news') or ""
+        
+        if not news_text.strip():
+            return render_template('index.html', prediction_text="Kripya text enter karein.")
 
-    # 1. First check Live Fact-Checking API
-    api_result = check_fact_api(news_text)
-    if api_result:
-        return render_template('index.html', prediction_text=f"Live Fact-Check: {api_result}")
+        text_lower = news_text.lower()
+        
+        # Explicit fake check override
+        if any(indicator in text_lower for indicator in FAKE_INDICATORS):
+            result = "Fake / Misleading News ⚠️"
+        else:
+            data = [news_text]
+            vect = vectorizer.transform(data)
+            prediction = model.predict(vect)
+            result = "Real News ✅" if prediction[0] == 1 else "Fake / Misleading News ⚠️"
 
-    # 2. Fallback to Machine Learning Model
-    # (Your ML Model code here)
+        return render_template('index.html', prediction_text=f'Result: {result}')
+
+if __name__ == '__main__':
+    app.run()
