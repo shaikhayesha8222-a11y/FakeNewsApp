@@ -40,7 +40,7 @@ except Exception as e:
 GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY_HERE"
 
 def verify_claim_via_api(query_text):
-    if not GOOGLE_API_KEY or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
+    if not GOOGLE_API_KEY or GOOGLE_API_KEY == "AIzaSyBSrAqkpdcm_dfxSjrY2pvC9DooARrBoiQ":
         return None
 
     url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={query_text}&key={GOOGLE_API_KEY}"
