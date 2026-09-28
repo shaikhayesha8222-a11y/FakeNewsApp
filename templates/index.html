@@ -15,7 +15,7 @@
             background: linear-gradient(135deg, #007bff, #00c6ff);
             color: white;
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
         }
         .container {
             max-width: 1000px;
@@ -33,16 +33,15 @@
             flex: 1;
             min-width: 300px;
         }
-        textarea {
+        textarea, input[type="text"] {
             width: 100%;
-            height: 120px;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
             font-size: 14px;
             box-sizing: border-box;
-            resize: vertical;
         }
+        textarea { height: 100px; resize: vertical; }
         button {
             background-color: #007bff;
             color: white;
@@ -55,9 +54,7 @@
             margin-top: 15px;
             font-weight: bold;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
+        button:hover { background-color: #0056b3; }
         .result-box {
             margin-top: 20px;
             padding: 15px;
@@ -65,10 +62,40 @@
             background-color: #e9ecef;
             border-left: 5px solid #007bff;
         }
-        .guidelines li {
-            margin-bottom: 12px;
-            font-size: 15px;
-            color: #333;
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .star-rating input { display: none; }
+        .star-rating label {
+            font-size: 30px;
+            color: #ddd;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f5b301;
+        }
+        .flash-msg {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .admin-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .admin-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -82,6 +109,14 @@
     <div class="container">
         <!-- Input Form Section -->
         <div class="card">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-msg">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <h2>Verify News Article</h2>
             <p style="color: #666;">Paste news headline or text here:</p>
             
@@ -94,18 +129,37 @@
             <div class="result-box">
                 <h3 style="color: #003366; margin: 0;">{{ prediction_text }}</h3>
             </div>
+
+            <!-- 5-Star Feedback Form -->
+            <div style="margin-top: 25px; border-top: 1px solid #ddd; padding-top: 15px;">
+                <h4 style="margin: 0; text-align: center; color: #333;">Rate this Analysis</h4>
+                <form action="/submit_feedback" method="POST">
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required/><label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"/><label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"/><label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"/><label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"/><label for="star1">★</label>
+                    </div>
+                    <input type="text" name="comments" placeholder="Optional feedback comments..." style="margin-bottom: 10px;">
+                    <button type="submit" style="background-color: #28a745;">Submit Feedback</button>
+                </form>
+            </div>
             {% endif %}
         </div>
 
-        <!-- Media Literacy Guidelines Section -->
+        <!-- Guidelines -->
         <div class="card">
             <h2>💡 Media Literacy Guidelines</h2>
-            <ul class="guidelines" style="list-style-type: none; padding-left: 0;">
+            <ul style="list-style-type: none; padding-left: 0; line-height: 2;">
                 <li>🔍 <strong>Check Domain:</strong> Fake websites have different URLs (e.g., .com.co).</li>
                 <li>👤 <strong>Author Check:</strong> Verify the authenticity of the writer.</li>
                 <li>📅 <strong>Check Date:</strong> Is old news being shared out of context?</li>
                 <li>🚩 <strong>Clickbait Titles:</strong> Overly emotional headlines can be fake.</li>
             </ul>
+            <div class="admin-link">
+                <a href="/admin" target="_blank">📊 View Database Records & Admin Portal</a>
+            </div>
         </div>
     </div>
 
