@@ -1,1 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TruthCheck - Admin Dashboard & Database Logs</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 30px; background-color: #f8f9fa; }
+        h1, h2 { color: #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .star { color: #f5b301; font-size: 18px; }
+    </style>
+</head>
+<body>
 
+    <h1>📊 TruthCheck Database Records Dashboard</h1>
+    <p>Live analysis queries and user feedback stored in the database.</p>
+
+    <h2>1. Recent Analysis Logs</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>News Headline / Claim</th>
+                <th>Result Generated</th>
+                <th>Timestamp (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in searches %}
+            <tr>
+                <td>{{ s.id }}</td>
+                <td>{{ s.news_text }}</td>
+                <td>{{ s.result }}</td>
+                <td>{{ s.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No searches recorded yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>2. User Feedback & Star Ratings</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Star Rating</th>
+                <th>Comments</th>
+                <th>Timestamp (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in feedbacks %}
+            <tr>
+                <td>{{ f.id }}</td>
+                <td>
+                    <span class="star">
+                        {% for i in range(f.rating) %}★{% endfor %}
+                    </span> ({{ f.rating }}/5)
+                </td>
+                <td>{{ f.comments or 'N/A' }}</td>
+                <td>{{ f.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No feedback submitted yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="/">← Back to Main Portal</a>
+
+</body>
+</html>
