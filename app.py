@@ -1,5 +1,6 @@
 import os
 import requests
+import urllib.parse
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -25,7 +26,6 @@ class UserFeedback(db.Model):
     comments = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Create database tables if not exist
 with app.app_context():
     db.create_all()
 
@@ -37,13 +37,14 @@ except Exception as e:
     model, vectorizer = None, None
 
 # GOOGLE FACT CHECK API KEY
-GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY_HERE"
+GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY_HERE"  # Keep your actual API Key inside quotes
 
 def verify_claim_via_api(query_text):
-    if not GOOGLE_API_KEY or GOOGLE_API_KEY == "AIzaSyBSrAqkpdcm_dfxSjrY2pvC9DooARrBoiQ":
+    if not GOOGLE_API_KEY or GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
         return None
 
-    url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={query_text}&key={GOOGLE_API_KEY}"
+    clean_query = urllib.parse.quote(query_text.strip())
+    url = f"https://factchecktools.googleapis.com/v1alpha1/claims:search?query={clean_query}&key={GOOGLE_API_KEY}"
     
     try:
         response = requests.get(url, timeout=5)
@@ -56,7 +57,7 @@ def verify_claim_via_api(query_text):
                 publisher = review.get("publisher", {}).get("name", "Fact Checker")
                 
                 rating_lower = rating.lower()
-                if "false" in rating_lower or "fake" in rating_lower or "misleading" in rating_lower or "incorrect" in rating_lower:
+                if any(w in rating_lower for w in ["false", "fake", "misleading", "incorrect", "hoax", "pants on fire"]):
                     return f"{rating} (Verified by {publisher}) ⚠️"
                 else:
                     return f"{rating} (Verified by {publisher}) ✅"
@@ -77,13 +78,13 @@ def predict():
         if not news_text.strip():
             return render_template('index.html', prediction_text="Please enter text to verify.")
 
-        # 1. Primary Layer: Real-Time Dynamic API Fact-Check
+        # 1. Dynamic API Check
         api_result = verify_claim_via_api(news_text)
         
         if api_result:
             result = f"Live Fact Check: {api_result}"
         else:
-            # 2. Secondary Layer: Machine Learning Pattern Prediction
+            # 2. ML Fallback
             if model and vectorizer:
                 data = [news_text]
                 vect = vectorizer.transform(data)
@@ -92,7 +93,7 @@ def predict():
             else:
                 result = "Analysis Completed"
 
-        # Save Search to Database
+        # Save to SQLite Database
         try:
             log_entry = NewsSearchLog(news_text=news_text, result=result)
             db.session.add(log_entry)
